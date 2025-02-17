@@ -1,0 +1,9 @@
+models
+outputs
+
+.vscode
+venv
+
+# Python files
+*.pyc
+__pycache__/
