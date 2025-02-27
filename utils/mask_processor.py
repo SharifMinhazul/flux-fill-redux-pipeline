@@ -132,8 +132,9 @@ class MaskProcessor:
             in zip(class_names, confidences)
         ]
         # return Image.new("L", image.size, 128)  # Placeholder
-        return Image.fromarray(masks, mode="L")
-        
+        # return Image.fromarray(masks, mode="L")
+        return torch.from_numpy(masks).unsqueeze(0)
+
     @staticmethod
     def expand_mask(mask, expand, tapered_corners, flip_input, blur_radius, incremental_expandrate, lerp_alpha, decay_factor, fill_holes=False):
         alpha = lerp_alpha
