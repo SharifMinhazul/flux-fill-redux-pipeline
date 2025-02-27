@@ -33,6 +33,9 @@ class MaskProcessor:
         # create output directory
         self.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+        # print(torch.backends.cudnn.version())
+        # os.environ["TORCH_CUDNN_SDPA_ENABLED"] = "1"
+
         # build SAM2 image predictor
         sam2_checkpoint = self.SAM2_CHECKPOINT
         model_cfg = self.SAM2_MODEL_CONFIG
@@ -70,20 +73,10 @@ class MaskProcessor:
         text_threshold=self.TEXT_THRESHOLD,
         )
 
-        print("boxes shape:", boxes.shape)
-        print("confidences shape:", confidences.shape)
-        print("labels shape:", len(labels))
-        print("Boxes:", boxes)
-        print("Confidences:", confidences)
-        print("Labels:", labels)
-
         # process the box prompt for SAM 2
         h, w, _ = image_source.shape
         boxes = boxes * torch.Tensor([w, h, w, h])
         input_boxes = box_convert(boxes=boxes, in_fmt="cxcywh", out_fmt="xyxy").numpy()
-
-        print("input_boxes shape:", input_boxes.shape)
-        print("input_boxes:", input_boxes)
 
         # FIXME: figure how does this influence the G-DINO model
         # torch.autocast(device_type="cuda", dtype=torch.bfloat16).__enter__()
@@ -103,8 +96,6 @@ class MaskProcessor:
         # convert mask to binary
         masks = masks > self.MASK_THRESHOLD
 
-        print("masks shape:", masks.shape)
-
         # convert the shape to (n, H, W)
         if masks.ndim == 4:
             # If there are multiple masks them merge into 1 single mask
@@ -119,8 +110,6 @@ class MaskProcessor:
         """
         Post-process the output of the model to get the masks, scores, and logits for visualization
         """
-
-        print("masks shape:", masks.shape)
 
         confidences = confidences.numpy().tolist()
         class_names = labels
