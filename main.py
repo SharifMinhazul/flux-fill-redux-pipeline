@@ -68,4 +68,5 @@ async def edit_image(
         ImageProcessor.save_image(final_output, f"outputs/INPUT_{ImageProcessor.get_image_name_without_extension(input_image)}_OUTFIT_{ImageProcessor.get_image_name_without_extension(outfit_image)}_EDIT_{edit_location}_{uuid.uuid1()}.png")
         return FileResponse("output.png", media_type="image/png")
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
