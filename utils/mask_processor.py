@@ -59,9 +59,9 @@ class MaskProcessor:
         if not text.endswith("."):
             text += "."
 
-        image.save("temp.png")
+        image.save("outputs/temp.png")
 
-        image_source, image = load_image("temp.png")
+        image_source, image = load_image("outputs/temp.png")
         # Ensure the NumPy array is writable
         img_source = image_source.copy()
 
