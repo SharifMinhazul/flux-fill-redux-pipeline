@@ -26,7 +26,7 @@ async def edit_image(
     input_image: UploadFile = File(...),
     style_image: UploadFile = File(...),
     edit_location: str = Form(...),
-    input_mask: Optional[UploadFile] = File(None)
+    input_mask: Optional[UploadFile] = File(default=None)
 ):
     try:
         # Step 1: Load images
@@ -43,21 +43,13 @@ async def edit_image(
 
         mask_img = tensor2pil(mask_img)[0]
 
-        trimmed_img = MaskProcessor.apply_mask(resized_input_img, mask_img)
+        ImageProcessor.save_image(mask_img, "outputs/mask.png")
+        img = ImageProcessor.load_image("outputs/mask.png")
 
         # return generated_mask
-        # return StreamingResponse(io.BytesIO(masked_image.tobytes()), media_type="image/png")
-        return JSONResponse(content={"message": "Mask generated successfully."})
-        
-        # Step 3: Grow the mask or modify it
-        modified_mask = mask_processor.grow_mask(generated_mask)
-        
-        # Step 4: Merge input image with outfit image
-        merged_img = ImageMerger.merge_images(input_img, outfit_img)
-        
-        # Step 5: Fit mask to merged image
-        fitted_mask = ImageMerger.fit_mask(modified_mask, merged_img)
-        
+        return StreamingResponse(io.BytesIO(img.tobytes()), media_type="image/png")
+        # return JSONResponse(content={"message": "Mask generated successfully."})
+
         # Step 6: Process outfit image with Redux
         styled_outfit = ReduxProcessor.apply_redux(outfit_img)
         
