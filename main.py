@@ -43,11 +43,8 @@ async def edit_image(
 
         mask_img = tensor2pil(mask_img)[0]
 
-        ImageProcessor.save_image(mask_img, "outputs/mask.png")
-        img = ImageProcessor.load_image("outputs/mask.png")
-
         # return generated_mask
-        return StreamingResponse(io.BytesIO(img.tobytes()), media_type="image/png")
+        return StreamingResponse(io.BytesIO(mask_img.tobytes()), media_type="image/png")
         # return JSONResponse(content={"message": "Mask generated successfully."})
 
         # Step 6: Process outfit image with Redux
