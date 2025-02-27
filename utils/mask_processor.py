@@ -9,7 +9,7 @@ from sam2.build_sam import build_sam2
 from sam2.sam2_image_predictor import SAM2ImagePredictor
 from groundingdino.util.inference import load_model, load_image, predict
 
-from misc.utility import tensor2pil, pil2tensor
+from .misc.utility import tensor2pil, pil2tensor
 
 class MaskProcessor:
     """Handles mask generation and modification."""
