@@ -19,7 +19,7 @@ import traceback
 mask_processor = MaskProcessor()
 
 # Initialize FastAPI
-app = FastAPI()
+app = FastAPI(swagger_ui_parameters={"tryItOutEnabled": True})
 
 @app.post("/edit")
 async def edit_image(
