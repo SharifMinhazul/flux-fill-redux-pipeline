@@ -12,6 +12,9 @@ from utils.image_merger import ImageMerger
 from utils.redux_processor import ReduxProcessor
 from utils.ksampler_processor import KSamplerProcessor
 
+from utils.misc.utility import tensor2pil, pil2tensor
+import traceback
+
 # Initialize Mask Processor
 mask_processor = MaskProcessor()
 
@@ -31,14 +34,16 @@ async def edit_image(
         style_img = ImageProcessor.load_image(style_image)
         mask_img = ImageProcessor.load_image(input_mask, "L") if input_mask else None
         
-        if not style_image:
+        resized_input_img, _, _ = ImageProcessor.resize(input_img, 1024, 1024, "keep proportion", "lanczos")
+        resized_input_img = tensor2pil(resized_input_img)[0]
+        if not mask_img:
             # Step 2: Generate segmentation mask (Grounding DINO + SAM2)
-            generated_mask = mask_processor.generate_mask(input_img, edit_location) if not mask_img else mask_img
-            mask_img, _ = mask_processor.expand_mask(generated_mask, 30, false, false, 5, 1.3, 1, 1, falseZ
+            generated_mask = mask_processor.generate_mask(resized_input_img, edit_location) if not mask_img else mask_img
+            mask_img, _ = mask_processor.expand_mask(generated_mask, 30, False, False, 5, 1.3, 1, 1, False)
 
-        # sked_image = mask_processor.apply_mask(input_img, generated_mask)
+        mask_img = tensor2pil(mask_img)[0]
 
-        masked_image.save("output.png")
+        trimmed_img = MaskProcessor.apply_mask(resized_input_img, mask_img)
 
         # return generated_mask
         # return StreamingResponse(io.BytesIO(masked_image.tobytes()), media_type="image/png")
