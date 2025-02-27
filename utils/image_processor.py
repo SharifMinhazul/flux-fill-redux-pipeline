@@ -22,7 +22,10 @@ class ImageProcessor:
     """Handles image processing steps."""
     
     @staticmethod
-    def load_image(upload_file: UploadFile, mode: str = "RGB") -> Image:
+    def load_image(upload_file: UploadFile | str, mode: str = "RGB") -> Image:
+        if isinstance(upload_file, str):
+            return Image.open(upload_file).convert(mode)
+        """Load an image from an upload file."""
         return Image.open(upload_file.file).convert(mode)
     
     @staticmethod
