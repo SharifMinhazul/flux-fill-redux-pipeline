@@ -58,9 +58,10 @@ class MaskProcessor:
         image.save("temp.png")
 
         image_source, image = load_image("temp.png")
+        # Ensure the NumPy array is writable
+        img_source = image_source.copy()
 
-        self.sam2_predictor.set_image(image_source)
-
+        self.sam2_predictor.set_image(img_source)
         boxes, confidences, labels = predict(
         model=self.grounding_model,
         image=image,
