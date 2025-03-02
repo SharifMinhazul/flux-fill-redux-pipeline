@@ -16,7 +16,7 @@ from utils.misc.utility import tensor2pil, pil2tensor
 import traceback
 
 # Initialize Mask Processor
-mask_processor = MaskProcessor()
+image_processor = ImageProcessor()
 
 # Initialize FastAPI
 app = FastAPI(swagger_ui_parameters={"tryItOutEnabled": True})
@@ -25,26 +25,24 @@ app = FastAPI(swagger_ui_parameters={"tryItOutEnabled": True})
 async def edit_image(
     input_image: UploadFile = File(...),
     style_image: UploadFile = File(...),
-    edit_location: str = Form(...),
-    input_mask: Optional[UploadFile] = File(default=None)
+    edit_location: str = Form(default="hair"),
+    mask_image: Optional[UploadFile] = File(default=None)
 ):
     try:
         # Step 1: Load images
-        input_img = ImageProcessor.load_image(input_image)
-        style_img = ImageProcessor.load_image(style_image)
-        mask_img = ImageProcessor.load_image(input_mask, "L") if input_mask else None
+        input_tensor, style_tensor, mask_tensor = image_processor.process(input_image, style_image, mask_image, edit_location)
         
-        resized_input_img, _, _ = ImageProcessor.resize(input_img, 1024, 1024, "keep proportion", "lanczos")
-        resized_input_img = tensor2pil(resized_input_img)[0]
-        if not mask_img:
-            # Step 2: Generate segmentation mask (Grounding DINO + SAM2)
-            generated_mask = mask_processor.generate_mask(resized_input_img, edit_location) if not mask_img else mask_img
-            mask_img, _ = mask_processor.expand_mask(generated_mask, 30, False, False, 5, 1.3, 1, 1, False)
+        input_pil = tensor2pil(input_tensor)[0]
+        style_pil = tensor2pil(style_tensor)[0]
+        mask_pil = tensor2pil(mask_tensor)[0]
 
-        mask_img = tensor2pil(mask_img)[0]
+        # Create a BytesIO buffer and save the PIL image into it in PNG format:
+        buf = io.BytesIO()
+        mask_pil.save(buf, format="PNG")
+        buf.seek(0)
 
         # return generated_mask
-        return StreamingResponse(io.BytesIO(mask_img.tobytes()), media_type="image/png")
+        return StreamingResponse(buf, media_type="image/png")
         # return JSONResponse(content={"message": "Mask generated successfully."})
 
         # Step 6: Process outfit image with Redux

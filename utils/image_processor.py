@@ -6,20 +6,40 @@ import torch
 import torchvision.transforms.functional as F
 from scipy.ndimage import gaussian_filter, grey_dilation, binary_fill_holes, binary_closing
 
+from utils.mask_processor import MaskProcessor
 from utils.misc.utility import pil2tensor, tensor2pil, lanczos
 
-MAX_RESOLUTION=16384
-
-def rescale(samples, width, height, algorithm: str):
-    if algorithm == "bislerp":  # convert for compatibility with old workflows
-        algorithm = "bicubic"
-    algorithm = getattr(Image, algorithm.upper())  # i.e. Image.BICUBIC
-    samples_pil: Image.Image = F.to_pil_image(samples[0].cpu()).resize((width, height), algorithm)
-    samples = F.to_tensor(samples_pil).unsqueeze(0)
-    return samples
-
 class ImageProcessor:
+    def __init__(self):
+        self.mask_processor = MaskProcessor()
+        self.MAX_RESOLUTION=1024
+
     """Handles image processing steps."""
+    def process(self, input_image, style_image, mask_image, edit_location):
+        input_img = self.load_image(input_image)
+        resized_input_tensor, _, _ = self.resize(input_img, self.MAX_RESOLUTION, self.MAX_RESOLUTION, "keep proportion", "lanczos")
+
+        style_img = self.load_image(style_image)
+        resized_style_tensor, _, _ = self.resize(style_image, self.MAX_RESOLUTION, self.MAX_RESOLUTION, "keep proportion", "lanczos")
+
+        mask_img = self.load_image(mask_image, "L") if mask_image else None
+        if mask_img is None:
+            # Step 2: Generate segmentation mask (Grounding DINO + SAM2)
+            generated_mask = self.mask_processor.generate_mask(resized_input_tensor, edit_location) if not mask_img else mask_img
+            mask_tensor, _ = self.mask_processor.expand_mask(generated_mask, 30, False, False, 5, 1.3, 1, 1, False)
+
+        resized_mask_tensor, _, _ = self.resize(mask_img, self.MAX_RESOLUTION, self.MAX_RESOLUTION, "keep proportion", "lanczos")
+
+        return resized_input_tensor, resized_style_tensor, resized_mask_tensor
+    
+    @staticmethod
+    def rescale(samples, width, height, algorithm: str):
+        if algorithm == "bislerp":  # convert for compatibility with old workflows
+            algorithm = "bicubic"
+        algorithm = getattr(Image, algorithm.upper())  # i.e. Image.BICUBIC
+        samples_pil: Image.Image = F.to_pil_image(samples[0].cpu()).resize((width, height), algorithm)
+        samples = F.to_tensor(samples_pil).unsqueeze(0)
+        return samples
     
     @staticmethod
     def load_image(upload_file: UploadFile | str, mode: str = "RGB") -> Image:
