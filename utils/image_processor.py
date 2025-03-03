@@ -10,27 +10,38 @@ from utils.mask_processor import MaskProcessor
 from utils.misc.utility import pil2tensor, tensor2pil, lanczos
 
 class ImageProcessor:
-    def __init__(self):
+    def __init__(self, max_resolution=1024):
+        self.MAX_RESOLUTION = max_resolution
         self.mask_processor = MaskProcessor()
-        self.MAX_RESOLUTION=1024
 
     """Handles image processing steps."""
     def process(self, input_image, style_image, mask_image, edit_location):
         input_img = self.load_image(input_image)
-        resized_input_tensor, _, _ = self.resize(input_img, self.MAX_RESOLUTION, self.MAX_RESOLUTION, "keep proportion", "lanczos")
+        resized_input_tensor, _, _ = self.resize(input_img, self.MAX_RESOLUTION, self.MAX_RESOLUTION, "keep proportion", "lanczos", "always")
 
         style_img = self.load_image(style_image)
-        resized_style_tensor, _, _ = self.resize(style_image, self.MAX_RESOLUTION, self.MAX_RESOLUTION, "keep proportion", "lanczos")
+        width = resized_input_tensor.shape[2]
+        height = resized_input_tensor.shape[1]
+        resized_style_tensor, _, _ = self.resize(style_img, width, height, "fill", "lanczos", "always")
 
         mask_img = self.load_image(mask_image, "L") if mask_image else None
         if mask_img is None:
             # Step 2: Generate segmentation mask (Grounding DINO + SAM2)
             generated_mask = self.mask_processor.generate_mask(resized_input_tensor, edit_location) if not mask_img else mask_img
-            mask_tensor, _ = self.mask_processor.expand_mask(generated_mask, 30, False, False, 5, 1.3, 1, 1, False)
+            resized_mask_tensor, _ = self.mask_processor.expand_mask(generated_mask, 30, False, False, 5, 1.3, 1, 1, False)
+        else:
+            resized_mask_tensor, _, _ = self.resize(mask_img, self.MAX_RESOLUTION, self.MAX_RESOLUTION, "keep proportion", "lanczos")
+                
+        # assert height and width of input and style image tensors are same
+        assert resized_input_tensor.shape == resized_style_tensor.shape, "Input and style image tensors must have the same shape."
 
-        resized_mask_tensor, _, _ = self.resize(mask_img, self.MAX_RESOLUTION, self.MAX_RESOLUTION, "keep proportion", "lanczos")
+        # merge input and style images side by side
+        merged_img_tensor = torch.cat((resized_style_tensor, resized_input_tensor), dim=2)
 
-        return resized_input_tensor, resized_style_tensor, resized_mask_tensor
+        # merge empty mask and generated mask side by side
+        merged_mask_tensor = torch.cat((torch.zeros(resized_style_tensor.shape[:-1]), resized_mask_tensor), dim=2)
+
+        return merged_img_tensor, merged_mask_tensor
     
     @staticmethod
     def rescale(samples, width, height, algorithm: str):
@@ -48,8 +59,7 @@ class ImageProcessor:
         """Load an image from an upload file."""
         return Image.open(upload_file.file).convert(mode)
     
-    @staticmethod
-    def resize(image, width, height, method="stretch", interpolation="nearest", condition="always", multiple_of=0, keep_proportion=False):
+    def resize(self, image, width, height, method="stretch", interpolation="nearest", condition="always", multiple_of=0, keep_proportion=False):
         if isinstance(image, Image.Image):
             image = pil2tensor(image)
  
@@ -66,12 +76,12 @@ class ImageProcessor:
 
         if method == 'keep proportion' or method == 'pad':
             if width == 0 and oh < height:
-                width = MAX_RESOLUTION
+                width = self.MAX_RESOLUTION
             elif width == 0 and oh >= height:
                 width = ow
 
             if height == 0 and ow < width:
-                height = MAX_RESOLUTION
+                height = self.MAX_RESOLUTION
             elif height == 0 and ow >= width:
                 height = oh
 
@@ -483,14 +493,14 @@ class ImageProcessor:
                 # Adjust to meet minimum width constraint
                 target_width = min(current_width, min_width)
                 target_height = int(target_width / min_aspect_ratio)
-                x_min, x_max, y_min, y_max = djust_to_aspect_ratio(x_min, x_max, y_min, y_max, width, height, target_width, target_height)
-                x_min, x_max, y_min, y_max = djust_to_preferred(x_min, x_max, y_min, y_max, width, height, start_x, start_x+initial_width, start_y, start_y+initial_height)
+                x_min, x_max, y_min, y_max = adjust_to_aspect_ratio(x_min, x_max, y_min, y_max, width, height, target_width, target_height)
+                x_min, x_max, y_min, y_max = adjust_to_preferred(x_min, x_max, y_min, y_max, width, height, start_x, start_x+initial_width, start_y, start_y+initial_height)
             elif current_aspect_ratio > max_aspect_ratio:
                 # Adjust to meet maximum width constraint
                 target_height = min(current_height, max_height)
                 target_width = int(target_height * max_aspect_ratio)
-                x_min, x_max, y_min, y_max = djust_to_aspect_ratio(x_min, x_max, y_min, y_max, width, height, target_width, target_height)
-                x_min, x_max, y_min, y_max = djust_to_preferred(x_min, x_max, y_min, y_max, width, height, start_x, start_x+initial_width, start_y, start_y+initial_height)
+                x_min, x_max, y_min, y_max = adjust_to_aspect_ratio(x_min, x_max, y_min, y_max, width, height, target_width, target_height)
+                x_min, x_max, y_min, y_max = adjust_to_preferred(x_min, x_max, y_min, y_max, width, height, start_x, start_x+initial_width, start_y, start_y+initial_height)
             else:
                 # Aspect ratio is within bounds, keep the current size
                 target_width = current_width
@@ -565,8 +575,8 @@ class ImageProcessor:
 
         # Pad area (if possible, i.e. if pad is smaller than width/height) to avoid the sampler returning smaller results
         if (mode == 'free size' or mode == 'ranged size') and padding > 1:
-            x_min, x_max = pply_padding(x_min, x_max, width, padding)
-            y_min, y_max = pply_padding(y_min, y_max, height, padding)
+            x_min, x_max = apply_padding(x_min, x_max, width, padding)
+            y_min, y_max = apply_padding(y_min, y_max, height, padding)
 
         # Ensure that context area doesn't go outside of the image
         x_min = max(x_min, 0)

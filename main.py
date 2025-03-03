@@ -5,6 +5,7 @@ import uuid
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from typing import Optional
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+import torch
 
 from utils.image_processor import ImageProcessor
 from utils.mask_processor import MaskProcessor
@@ -30,11 +31,9 @@ async def edit_image(
 ):
     try:
         # Step 1: Load images
-        input_tensor, style_tensor, mask_tensor = image_processor.process(input_image, style_image, mask_image, edit_location)
-        
-        input_pil = tensor2pil(input_tensor)[0]
-        style_pil = tensor2pil(style_tensor)[0]
-        mask_pil = tensor2pil(mask_tensor)[0]
+        merged_img_tensor, merged_mask_tensor = image_processor.process(input_image, style_image, mask_image, edit_location)
+
+        mask_pil = tensor2pil(merged_mask_tensor)[0]
 
         # Create a BytesIO buffer and save the PIL image into it in PNG format:
         buf = io.BytesIO()

@@ -50,7 +50,7 @@ class MaskProcessor:
             device=self.DEVICE
         )
 
-    def generate_mask(self, image: Image, edit_location: str) -> Image:
+    def generate_mask(self, image: torch.Tensor, edit_location: str) -> Image:
         """Generate mask for the image."""
 
         # setup the input image and text prompt for SAM 2 and Grounding DINO
@@ -59,9 +59,7 @@ class MaskProcessor:
         if not text.endswith("."):
             text += "."
 
-        image.save("outputs/temp.png")
-
-        image_source, image = load_image("outputs/temp.png")
+        image_source, image = load_image(image)
         # Ensure the NumPy array is writable
         img_source = image_source.copy()
 
