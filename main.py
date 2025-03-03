@@ -32,8 +32,11 @@ async def edit_image(
 ):
     try:
         # Step 1: Load images
-        merged_img_tensor, merged_mask_tensor = image_processor.process(input_image, style_image, mask_image, edit_location)
+        merged_img_tensor, merged_mask_tensor, resized_style_tensor = image_processor.process(input_image, style_image, mask_image, edit_location)
 
+        # Step 2: Process images with Redux
+        encoding = redux_processor.apply_redux(resized_style_tensor)
+        print("Encoding:", encoding)
         mask_pil = tensor2pil(merged_mask_tensor)[0]
 
         # Create a BytesIO buffer and save the PIL image into it in PNG format:

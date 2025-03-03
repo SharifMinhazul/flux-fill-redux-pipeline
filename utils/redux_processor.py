@@ -10,17 +10,18 @@ from utils.misc.clip_vision import load
 class ReduxProcessor:
     """Handles Redux model processing."""
 
-    def load_clip(self, clip_path: str) -> tuple:
-        """Load CLIP model."""
-        clip_vision = load(clip_path)
-        return (clip_vision,)
-    
     def __init__(self, clip_path: str):
-        self.clip_vision = self.load_clip(clip_path)
+        self.clip_vision = load(clip_path)
+
+    def encode(self, image, crop):
+        crop_image = True
+        if crop != "center":
+            crop_image = False
+        output = self.clip_vision.encode_image(image, crop=crop_image)
+        return (output,)
     
-    @staticmethod
-    def apply_redux(image: Image) -> Image:
-        """Process outfit image using Redux."""
-        # TODO: Implement Redux model inference
-        return image
+    def apply_redux(self, image: torch.Tensor) -> torch.Tensor:
+        """Apply Redux model to image."""
+        with torch.no_grad():
+            return self.encode(image, crop=True)
     

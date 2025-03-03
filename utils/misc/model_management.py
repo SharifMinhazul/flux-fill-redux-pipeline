@@ -775,8 +775,8 @@ def supports_cast(device, dtype): #TODO
         return True
     if dtype == torch.float16:
         return True
-    if directml_enabled: #TODO: test this
-        return False
+    # if directml_enabled: #TODO: test this
+    #    return False
     if dtype == torch.bfloat16:
         return True
     if is_device_mps(device):
@@ -805,8 +805,8 @@ def device_supports_non_blocking(device):
         return False
     if args.deterministic: #TODO: figure out why deterministic breaks non blocking from gpu to cpu (previews)
         return False
-    if directml_enabled:
-        return False
+    # if directml_enabled:
+    #     return False
     return True
 
 def device_should_use_non_blocking(device):
@@ -845,8 +845,8 @@ def xformers_enabled():
         return False
     if is_intel_xpu():
         return False
-    if directml_enabled:
-        return False
+    # if directml_enabled:
+    #    return False
     return XFORMERS_IS_AVAILABLE
 
 
@@ -893,10 +893,10 @@ def get_free_memory(dev=None, torch_free_too=False):
         mem_free_total = psutil.virtual_memory().available
         mem_free_torch = mem_free_total
     else:
-        if directml_enabled:
-            mem_free_total = 1024 * 1024 * 1024 #TODO
-            mem_free_torch = mem_free_total
-        elif is_intel_xpu():
+        # if directml_enabled:
+        #     mem_free_total = 1024 * 1024 * 1024 #TODO
+        #     mem_free_torch = mem_free_total
+        if is_intel_xpu():
             stats = torch.xpu.memory_stats(dev)
             mem_active = stats['active_bytes.all.current']
             mem_reserved = stats['reserved_bytes.all.current']
@@ -956,8 +956,8 @@ def should_use_fp16(device=None, model_params=0, prioritize_performance=True, ma
     if FORCE_FP32:
         return False
 
-    if directml_enabled:
-        return False
+    # if directml_enabled:
+    #     return False
 
     if mps_mode():
         return True
@@ -1015,8 +1015,8 @@ def should_use_bf16(device=None, model_params=0, prioritize_performance=True, ma
     if FORCE_FP32:
         return False
 
-    if directml_enabled:
-        return False
+    # if directml_enabled:
+    #     return False
 
     if mps_mode():
         return True

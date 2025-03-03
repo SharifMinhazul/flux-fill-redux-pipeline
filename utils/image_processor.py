@@ -41,7 +41,7 @@ class ImageProcessor:
         # merge empty mask and generated mask side by side
         merged_mask_tensor = torch.cat((torch.zeros(resized_style_tensor.shape[:-1]), resized_mask_tensor), dim=2)
 
-        return merged_img_tensor, merged_mask_tensor
+        return merged_img_tensor, merged_mask_tensor, resized_style_tensor
     
     @staticmethod
     def rescale(samples, width, height, algorithm: str):
