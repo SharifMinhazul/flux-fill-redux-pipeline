@@ -17,7 +17,8 @@ from utils.misc.utility import tensor2pil, pil2tensor
 import traceback
 
 # Initialize Mask Processor
-image_processor = ImageProcessor()
+image_processor = ImageProcessor(max_resolution=1024)
+redux_processor = ReduxProcessor(clip_path="models/clip_vision/sigclip_vision_patch14_384.safetensors")
 
 # Initialize FastAPI
 app = FastAPI(swagger_ui_parameters={"tryItOutEnabled": True})

@@ -15,6 +15,9 @@ class ReduxProcessor:
         clip_vision = load(clip_path)
         return (clip_vision,)
     
+    def __init__(self, clip_path: str):
+        self.clip_vision = self.load_clip(clip_path)
+    
     @staticmethod
     def apply_redux(image: Image) -> Image:
         """Process outfit image using Redux."""
