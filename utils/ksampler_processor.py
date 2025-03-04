@@ -2,6 +2,7 @@ import torch
 from PIL import Image
 
 import utils.misc.sample
+import utils.misc.utility
 from utils.misc.sd import load_diffusion_model
 from utils.misc import latent_preview
 
@@ -34,7 +35,7 @@ class KSamplerProcessor:
             noise_mask = latent["noise_mask"]
 
         callback = latent_preview.prepare_callback(self.model, steps)
-        disable_pbar = not utils.misc.utils.PROGRESS_BAR_ENABLED
+        disable_pbar = not utils.misc.utility.PROGRESS_BAR_ENABLED
         samples = utils.misc.sample.sample(self.model, noise, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
                                     denoise=denoise, disable_noise=disable_noise, start_step=start_step, last_step=last_step,
                                     force_full_denoise=force_full_denoise, noise_mask=noise_mask, callback=callback, disable_pbar=disable_pbar, seed=seed)
