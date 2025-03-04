@@ -2,7 +2,7 @@ import argparse
 import enum
 import os
 from typing import Optional
-from . import options
+import options
 
 
 class EnumAction(argparse.Action):

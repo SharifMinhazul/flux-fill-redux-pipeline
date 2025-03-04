@@ -1,6 +1,6 @@
 import torch
-from .ldm.modules.attention import optimized_attention_for_device
-from . import ops
+from ldm.modules.attention import optimized_attention_for_device
+import ops
 
 class CLIPAttention(torch.nn.Module):
     def __init__(self, embed_dim, heads, dtype, device, operations):

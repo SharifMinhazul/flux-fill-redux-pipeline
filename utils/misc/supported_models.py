@@ -1,9 +1,9 @@
 import torch
-from . import model_base
-from . import utils
+import model_base
+import utility as utils
 
-from . import sd1_clip
-from . import sdxl_clip
+import sd1_clip
+import sdxl_clip
 import utils.misc.text_encoders.sd2_clip
 import utils.misc.text_encoders.sd3_clip
 import utils.misc.text_encoders.sa_t5
@@ -13,10 +13,10 @@ import utils.misc.text_encoders.flux
 import utils.misc.text_encoders.genmo
 import utils.misc.text_encoders.lt
 
-from . import supported_models_base
-from . import latent_formats
+import supported_models_base
+import latent_formats
 
-from . import diffusers_convert
+import diffusers_convert
 
 class SD15(supported_models_base.BASE):
     unet_config = {

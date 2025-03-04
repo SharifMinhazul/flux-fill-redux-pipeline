@@ -1,5 +1,5 @@
-from comfy import sd1_clip
-from comfy import sdxl_clip
+from utils.misc import sd1_clip
+from utils.misc import sdxl_clip
 from transformers import T5TokenizerFast
 import utils.misc.text_encoders.t5
 import torch

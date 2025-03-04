@@ -6,9 +6,9 @@ import math
 from torch import Tensor, nn
 from einops import rearrange, repeat
 
-from .layers import (timestep_embedding)
+from layers import (timestep_embedding)
 
-from .model import Flux
+from model import Flux
 import utils.misc.ldm.common_dit
 
 class MistolineCondDownsamplBlock(nn.Module):

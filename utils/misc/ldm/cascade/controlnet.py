@@ -18,7 +18,7 @@
 
 import torchvision
 from torch import nn
-from .common import LayerNorm2d_op
+from common import LayerNorm2d_op
 
 
 class CNetResBlock(nn.Module):

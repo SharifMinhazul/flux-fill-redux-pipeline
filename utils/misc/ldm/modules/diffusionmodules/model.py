@@ -5,13 +5,13 @@ import torch.nn as nn
 import numpy as np
 import logging
 
-from comfy import model_management
+from utils.misc import model_management
 import utils.misc.ops
 ops = utils.misc.ops.disable_weight_init
 
-if model_management.xformers_enabled_vae():
-    import xformers
-    import xformers.ops
+# if model_management.xformers_enabled_vae():
+#     import xformers
+#     import xformers.ops
 
 def get_timestep_embedding(timesteps, embedding_dim):
     """

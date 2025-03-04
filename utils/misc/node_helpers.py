@@ -1,6 +1,6 @@
 import hashlib
 
-from .cli_args import args
+from cli_args import args
 
 from PIL import ImageFile, UnidentifiedImageError
 

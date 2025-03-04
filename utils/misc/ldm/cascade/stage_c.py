@@ -20,7 +20,7 @@ import torch
 from torch import nn
 import math
 from .common import AttnBlock, LayerNorm2d_op, ResBlock, FeedForwardBlock, TimestepBlock
-# from .controlnet import ControlNetDeliverer
+# from controlnet import ControlNetDeliverer
 
 class UpDownBlock2d(nn.Module):
     def __init__(self, c_in, c_out, mode, enabled=True, dtype=None, device=None, operations=None):

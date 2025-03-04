@@ -19,7 +19,7 @@
 import psutil
 import logging
 from enum import Enum
-from .cli_args import args
+from cli_args import args
 import torch
 import sys
 import platform

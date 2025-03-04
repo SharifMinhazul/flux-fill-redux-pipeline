@@ -10,10 +10,10 @@ if TYPE_CHECKING:
     from model_patcher import ModelPatcher, PatcherInjection
     from model_base import BaseModel
     from sd import CLIP
-from . import lora
-from . import model_management
-from . import patcher_extension
-from .node_helpers import conditioning_set_values
+import lora
+import model_management
+import patcher_extension
+from node_helpers import conditioning_set_values
 
 class EnumHookMode(enum.Enum):
     MinVram = "minvram"

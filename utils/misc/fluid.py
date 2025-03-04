@@ -2,7 +2,7 @@ import numpy as np
 from scipy.ndimage import map_coordinates, spline_filter
 from scipy.sparse.linalg import factorized
 
-from .numerical import difference, operator
+from numerical import difference, operator
 
 
 class Fluid:

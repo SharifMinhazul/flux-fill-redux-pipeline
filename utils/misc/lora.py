@@ -15,11 +15,15 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
 from __future__ import annotations
-from . import utility
-from . import model_management
-from . import model_base
+
+import sys
+
+sys.path.append("utils/misc")
+
+import utility
+import model_management
+import model_base
 import logging
 import torch
 

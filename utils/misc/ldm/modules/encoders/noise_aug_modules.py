@@ -1,5 +1,5 @@
-from ..diffusionmodules.upscaling import ImageConcatWithNoiseAugmentation
-from ..diffusionmodules.openaimodel import Timestep
+from utils.misc.ldm.modules.diffusionmodules.upscaling import ImageConcatWithNoiseAugmentation
+from utils.misc.ldm.modules.diffusionmodules.openaimodel import Timestep
 import torch
 
 class CLIPEmbeddingNoiseAugmentation(ImageConcatWithNoiseAugmentation):

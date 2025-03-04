@@ -1,4 +1,4 @@
-from comfy import sd1_clip
+from utils.misc import sd1_clip
 import utils.misc.text_encoders.sd3_clip
 import os
 from transformers import T5TokenizerFast

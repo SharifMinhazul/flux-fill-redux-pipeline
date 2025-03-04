@@ -17,9 +17,9 @@
 """
 
 import torch
-from . import model_base
-from . import utils
-from . import latent_formats
+import model_base
+import utility as utils
+import latent_formats
 
 class ClipTarget:
     def __init__(self, tokenizer, clip):

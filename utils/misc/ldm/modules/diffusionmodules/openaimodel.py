@@ -12,7 +12,7 @@ from .util import (
     timestep_embedding,
     AlphaBlender,
 )
-from ..attention import SpatialTransformer, SpatialVideoTransformer, default
+from utils.misc.ldm.modules.attention import SpatialTransformer, SpatialVideoTransformer, default
 from utils.misc.ldm.util import exists
 import utils.misc.patcher_extension
 import utils.misc.ops

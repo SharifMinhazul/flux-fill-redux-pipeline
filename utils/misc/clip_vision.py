@@ -1,13 +1,13 @@
-from .utility import load_torch_file, transformers_convert, state_dict_prefix_replace
+from utility import load_torch_file, transformers_convert, state_dict_prefix_replace
 import os
 import torch
 import json
 import logging
 
-from . import ops
-from . import model_patcher
-from . import model_management
-from . import clip_model
+import ops
+import model_patcher
+import model_management
+import clip_model
 
 class Output:
     def __getitem__(self, key):

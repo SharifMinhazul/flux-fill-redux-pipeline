@@ -17,9 +17,9 @@
 """
 
 import torch
-from . import model_management
-from . import float
-from .cli_args import args
+import model_management
+import float
+from cli_args import args
 
 cast_to = model_management.cast_to #TODO: remove once no more references
 

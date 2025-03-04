@@ -5,7 +5,7 @@ import utils.misc.ops
 import torch
 import traceback
 import zipfile
-from . import model_management
+import model_management
 import utils.misc.clip_model
 import json
 import logging

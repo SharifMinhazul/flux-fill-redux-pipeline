@@ -1,10 +1,10 @@
 import math
 import torch
 from torch import nn
-from .ldm.modules.attention import CrossAttention
+from ldm.modules.attention import CrossAttention
 from inspect import isfunction
-import ops
-ops = ops.manual_cast
+import utils.misc.ops
+ops = utils.misc.ops.manual_cast
 
 def exists(val):
     return val is not None

@@ -16,7 +16,7 @@ cd models
 # Setup grounded sam 2 #
 ########################
 
-git clone https://github.com/IDEA-Research/Grounded-SAM-2.git
+# git clone https://github.com/IDEA-Research/Grounded-SAM-2.git
 cd Grounded-SAM-2
 
 cd checkpoints

@@ -1,4 +1,4 @@
-from comfy import sd1_clip
+from utils.misc import sd1_clip
 from .spiece_tokenizer import SPieceTokenizer
 import utils.misc.text_encoders.t5
 import os

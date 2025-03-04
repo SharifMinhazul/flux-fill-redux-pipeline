@@ -7,10 +7,10 @@ from utils.misc.ldm.modules.diffusionmodules.mmdit import (
     TimestepEmbedder,
     PatchEmbed,
 )
-from .poolers import AttentionPool
+from poolers import AttentionPool
 
 import utils.misc.latent_formats
-from .models import HunYuanDiTBlock, calc_rope
+from models import HunYuanDiTBlock, calc_rope
 
 
 

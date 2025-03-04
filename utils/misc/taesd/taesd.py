@@ -6,7 +6,7 @@ Tiny AutoEncoder for Stable Diffusion
 import torch
 import torch.nn as nn
 
-import utils.misc.utils
+import utils.misc.utility as utils
 import utils.misc.ops
 
 def conv(n_in, n_out, **kwargs):

@@ -1,4 +1,4 @@
-from comfy import sd1_clip
+from utils.misc import sd1_clip
 import utils.misc.text_encoders.t5
 import utils.misc.text_encoders.sd3_clip
 import utils.misc.model_management

@@ -1,5 +1,6 @@
 # main.py
 import io
+import sys
 import uuid
 
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
@@ -13,12 +14,17 @@ from utils.image_merger import ImageMerger
 from utils.redux_processor import ReduxProcessor
 from utils.ksampler_processor import KSamplerProcessor
 
+sys.path.append("utils/misc")
+
 from utils.misc.utility import tensor2pil, pil2tensor
 import traceback
 
+from utils.vae import load_vae
+
 # Initialize Mask Processor
 image_processor = ImageProcessor(max_resolution=1024)
-redux_processor = ReduxProcessor(clip_path="models/clip_vision/sigclip_vision_patch14_384.safetensors")
+vae = load_vae()
+redux_processor = ReduxProcessor(vae=vae)
 
 # Initialize FastAPI
 app = FastAPI(swagger_ui_parameters={"tryItOutEnabled": True})
@@ -35,8 +41,8 @@ async def edit_image(
         merged_img_tensor, merged_mask_tensor, resized_style_tensor = image_processor.process(input_image, style_image, mask_image, edit_location)
 
         # Step 2: Process images with Redux
-        encoding = redux_processor.apply_redux(resized_style_tensor)
-        print("Encoding:", encoding)
+        positive_conditioning, negative_conditioning, latent = redux_processor.apply_redux(resized_style_tensor, merged_img_tensor, merged_mask_tensor)
+        
         mask_pil = tensor2pil(merged_mask_tensor)[0]
 
         # Create a BytesIO buffer and save the PIL image into it in PNG format:

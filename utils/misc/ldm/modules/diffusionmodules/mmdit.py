@@ -3,7 +3,7 @@ from typing import Dict, Optional, List
 import numpy as np
 import torch
 import torch.nn as nn
-from ..attention import optimized_attention
+from utils.misc.ldm.modules.attention import optimized_attention
 from einops import rearrange, repeat
 from .util import timestep_embedding
 import utils.misc.ops

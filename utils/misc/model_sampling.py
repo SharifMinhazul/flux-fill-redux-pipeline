@@ -1,5 +1,5 @@
 import torch
-from .ldm.modules.diffusionmodules.util import make_beta_schedule
+from ldm.modules.diffusionmodules.util import make_beta_schedule
 import math
 
 def rescale_zero_terminal_snr_sigmas(sigmas):
