@@ -45,13 +45,11 @@ class KSamplerProcessor:
         return out
 
     def apply_ksampler(self, seed, steps, cfg, sampler_name, scheduler, positive,
-                       negative, latent) -> Image:
+                       negative, latent, denoise=1.0) -> Image:
         """Pass everything through KSampler with Flux Fill Dev."""
         # TODO: Implement KSampler inference
         samples = self.common_ksampler(seed, steps, cfg, sampler_name, scheduler,
-                                       positive, negative, latent, denoise=1.0,
-                                       disable_noise=False, start_step=None,
-                                       last_step=None, force_full_denoise=False)
+                                       positive, negative, latent, denoise)
 
         # Decode latent samples
         images = self.vae.decode(samples["samples"])

@@ -1,25 +1,17 @@
 # main.py
 import io
-import sys
-import uuid
 
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from typing import Optional
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
-import torch
+from fastapi.responses import StreamingResponse
 
 from utils.image_processor import ImageProcessor
-from utils.mask_processor import MaskProcessor
-from utils.image_merger import ImageMerger
 from utils.redux_processor import ReduxProcessor
 from utils.ksampler_processor import KSamplerProcessor
-
-sys.path.append("utils/misc")
-
 from utils.misc.utility import tensor2pil, pil2tensor
-import traceback
-
 from utils.vae import load_vae
+
+import traceback
 
 # Initialize Mask Processor
 image_processor = ImageProcessor(max_resolution=1024)
@@ -44,26 +36,28 @@ async def edit_image(
         # Step 2: Process images with Redux
         positive_conditioning, negative_conditioning, latent = redux_processor.apply_redux(resized_style_tensor, merged_img_tensor, merged_mask_tensor)
         
-        mask_pil = tensor2pil(merged_mask_tensor)[0]
+        # Step 3: Apply KSampler
+        generated_images = k_sampler_processor.apply_ksampler(
+            seed=0,
+            steps=20,
+            cfg=1.3,
+            sampler_name="euler",
+            scheduler="simple",
+            positive=positive_conditioning,
+            negative=negative_conditioning,
+            latent=latent,
+            denoise=1.0
+        )
+
+        output_pil = tensor2pil(generated_images)[0]
 
         # Create a BytesIO buffer and save the PIL image into it in PNG format:
         buf = io.BytesIO()
-        mask_pil.save(buf, format="PNG")
+        output_pil.save(buf, format="PNG")
         buf.seek(0)
 
-        # return generated_mask
+        # return generated output
         return StreamingResponse(buf, media_type="image/png")
-        # return JSONResponse(content={"message": "Mask generated successfully."})
-
-        # Step 6: Process outfit image with Redux
-        styled_outfit = ReduxProcessor.apply_redux(outfit_img)
-        
-        # Step 7: Apply style and pass to KSampler (Flux Fill Dev)
-        final_output = KSamplerProcessor.apply_ksampler(merged_img, fitted_mask, styled_outfit)
-        
-        # Save and return response
-        ImageProcessor.save_image(final_output, f"outputs/INPUT_{ImageProcessor.get_image_name_without_extension(input_image)}_OUTFIT_{ImageProcessor.get_image_name_without_extension(outfit_image)}_EDIT_{edit_location}_{uuid.uuid1()}.png")
-        return FileResponse("output.png", media_type="image/png")
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
