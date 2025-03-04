@@ -35,7 +35,7 @@ class ReduxProcessor:
         if crop != "center":
             crop_image = False
         output = self.clip_vision.encode_image(image, crop=crop_image)
-        return (output,)
+        return output
     
     def apply_stylemodel(self, clip_vision_output, conditioning, strength, strength_type):
         '''Apply style model to image.'''
@@ -47,7 +47,7 @@ class ReduxProcessor:
         for t in conditioning:
             n = [torch.cat((t[0], cond), dim=1), t[1].copy()]
             c.append(n)
-        return (c, )
+        return c
 
     
     def inpaint_model_conditioning(self, positive, negative, pixels, mask, noise_mask=True):
@@ -105,6 +105,6 @@ class ReduxProcessor:
 
         conditioning = self.apply_stylemodel(clip_vision_output, text_conditioning, 10.0, "multiply")
 
-        return self.inpaint_model_conditioning(conditioning, negative_text_conditioning, merged_image, self.vae, merged_mask)
+        return self.inpaint_model_conditioning(conditioning, negative_text_conditioning, merged_image, merged_mask)
 
     
