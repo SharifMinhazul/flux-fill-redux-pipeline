@@ -1,8 +1,47 @@
+import torch
 from PIL import Image
+
+import utils.misc.sample
+from utils.misc.sd import load_diffusion_model
+from utils.misc import latent_preview
 
 class KSamplerProcessor:
     """Handles KSampler model processing."""
+    def __init__(self, unet_path, weight_dtype):
+        model_options = {}
+        if weight_dtype == "fp8_e4m3fn":
+            model_options["dtype"] = torch.float8_e4m3fn
+        elif weight_dtype == "fp8_e4m3fn_fast":
+            model_options["dtype"] = torch.float8_e4m3fn
+            model_options["fp8_optimizations"] = True
+        elif weight_dtype == "fp8_e5m2":
+            model_options["dtype"] = torch.float8_e5m2
+
+        self.model = load_diffusion_model(unet_path, model_options=model_options)
     
+    def common_ksampler(self, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0, disable_noise=False, start_step=None, last_step=None, force_full_denoise=False):
+        latent_image = latent["samples"]
+        latent_image = utils.misc.sample.fix_empty_latent_channels(self.model, latent_image)
+
+        if disable_noise:
+            noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout, device="cpu")
+        else:
+            batch_inds = latent["batch_index"] if "batch_index" in latent else None
+            noise = utils.misc.sample.prepare_noise(latent_image, seed, batch_inds)
+
+        noise_mask = None
+        if "noise_mask" in latent:
+            noise_mask = latent["noise_mask"]
+
+        callback = latent_preview.prepare_callback(self.model, steps)
+        disable_pbar = not utils.misc.utils.PROGRESS_BAR_ENABLED
+        samples = utils.misc.sample.sample(self.model, noise, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,
+                                    denoise=denoise, disable_noise=disable_noise, start_step=start_step, last_step=last_step,
+                                    force_full_denoise=force_full_denoise, noise_mask=noise_mask, callback=callback, disable_pbar=disable_pbar, seed=seed)
+        out = latent.copy()
+        out["samples"] = samples
+        return out
+
     @staticmethod
     def apply_ksampler(merged_img: Image, mask: Image, styled_outfit: Image) -> Image:
         """Pass everything through KSampler with Flux Fill Dev."""
