@@ -1,6 +1,6 @@
-import utils.misc.supported_models
-import utils.misc.supported_models_base
-import utils.misc.utility
+import supported_models
+import supported_models_base
+import utility
 import math
 import logging
 import torch

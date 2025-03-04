@@ -8,7 +8,7 @@ from utils.misc import latent_preview
 
 class KSamplerProcessor:
     """Handles KSampler model processing."""
-    def __init__(self, unet_path, weight_dtype):
+    def __init__(self, vae, weight_dtype, unet_path: str = "models/unet/flux1-fill-dev.safetensors"):
         model_options = {}
         if weight_dtype == "fp8_e4m3fn":
             model_options["dtype"] = torch.float8_e4m3fn
@@ -19,6 +19,7 @@ class KSamplerProcessor:
             model_options["dtype"] = torch.float8_e5m2
 
         self.model = load_diffusion_model(unet_path, model_options=model_options)
+        self.vae = vae
     
     def common_ksampler(self, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0, disable_noise=False, start_step=None, last_step=None, force_full_denoise=False):
         latent_image = latent["samples"]
@@ -43,8 +44,18 @@ class KSamplerProcessor:
         out["samples"] = samples
         return out
 
-    @staticmethod
-    def apply_ksampler(merged_img: Image, mask: Image, styled_outfit: Image) -> Image:
+    def apply_ksampler(self, seed, steps, cfg, sampler_name, scheduler, positive,
+                       negative, latent) -> Image:
         """Pass everything through KSampler with Flux Fill Dev."""
         # TODO: Implement KSampler inference
-        return merged_img
+        samples = self.common_ksampler(seed, steps, cfg, sampler_name, scheduler,
+                                       positive, negative, latent, denoise=1.0,
+                                       disable_noise=False, start_step=None,
+                                       last_step=None, force_full_denoise=False)
+
+        # Decode latent samples
+        images = self.vae.decode(samples["samples"])
+        if len(images.shape) == 5: #Combine batches
+            images = images.reshape(-1, images.shape[-3], images.shape[-2],
+                                    images.shape[-1])
+        return images

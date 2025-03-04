@@ -25,6 +25,7 @@ from utils.vae import load_vae
 image_processor = ImageProcessor(max_resolution=1024)
 vae = load_vae()
 redux_processor = ReduxProcessor(vae=vae)
+k_sampler_processor = KSamplerProcessor(vae=vae, weight_dtype="fp8_e4m3fn")
 
 # Initialize FastAPI
 app = FastAPI(swagger_ui_parameters={"tryItOutEnabled": True})

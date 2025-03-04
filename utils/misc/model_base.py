@@ -25,12 +25,12 @@ from ldm.modules.encoders.noise_aug_modules import CLIPEmbeddingNoiseAugmentatio
 from ldm.modules.diffusionmodules.upscaling import ImageConcatWithNoiseAugmentation
 from ldm.modules.diffusionmodules.mmdit import OpenAISignatureMMDITWrapper
 from ldm.genmo.joint_model import asymm_models_joint
-import utils.misc.ldm.aura.mmdit
-import utils.misc.ldm.hydit.models
-import utils.misc.ldm.audio.dit
-import utils.misc.ldm.audio.embedders
-import utils.misc.ldm.flux.model
-import utils.misc.ldm.lightricks.model
+import ldm.aura.mmdit
+import ldm.hydit.models
+import ldm.audio.dit
+import ldm.audio.embedders
+import ldm.flux.model
+import ldm.lightricks.model
 
 import model_management
 import patcher_extension
@@ -55,7 +55,7 @@ class ModelType(Enum):
     FLUX = 8
 
 
-from model_sampling import EPS, V_PREDICTION, EDM, ModelSamplingDiscrete, ModelSamplingContinuousEDM, StableCascadeSampling, ModelSamplingContinuousV
+from model_sampling import CONST, EPS, V_PREDICTION, EDM, ModelSamplingDiscreteFlow, ModelSamplingFlux, ModelSamplingDiscrete, ModelSamplingContinuousEDM, StableCascadeSampling, ModelSamplingContinuousV
 
 
 def model_sampling(model_config, model_type):
@@ -69,8 +69,8 @@ def model_sampling(model_config, model_type):
         c = V_PREDICTION
         s = ModelSamplingContinuousEDM
     elif model_type == ModelType.FLOW:
-        c = model_sampling.CONST
-        s = model_sampling.ModelSamplingDiscreteFlow
+        c = CONST
+        s = ModelSamplingDiscreteFlow
     elif model_type == ModelType.STABLE_CASCADE:
         c = EPS
         s = StableCascadeSampling
@@ -81,8 +81,8 @@ def model_sampling(model_config, model_type):
         c = V_PREDICTION
         s = ModelSamplingContinuousV
     elif model_type == ModelType.FLUX:
-        c = model_sampling.CONST
-        s = model_sampling.ModelSamplingFlux
+        c = CONST
+        s = ModelSamplingFlux
 
     class ModelSampling(s, c):
         pass
