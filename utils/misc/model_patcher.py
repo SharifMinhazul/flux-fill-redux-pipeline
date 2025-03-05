@@ -765,7 +765,6 @@ class ModelPatcher:
         self.model_patches_to(self.offload_device)
         if unpatch_all:
             self.unpatch_model(self.offload_device, unpatch_weights=unpatch_all)
-        print("The honorable callback: ", CallbacksMP)
         for callback in self.get_all_callbacks(CallbacksMP.ON_DETACH):
             callback(self, unpatch_all)
         return self.model

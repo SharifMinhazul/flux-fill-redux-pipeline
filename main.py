@@ -1,6 +1,6 @@
-# main.py
 import io
 
+import traceback
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from typing import Optional
 from fastapi.responses import StreamingResponse
@@ -11,10 +11,8 @@ from utils.ksampler_processor import KSamplerProcessor
 from utils.misc.utility import tensor2pil, pil2tensor
 from utils.vae import load_vae
 
-import traceback
-
-# Initialize Mask Processor
-image_processor = ImageProcessor(max_resolution=1024)
+# Initialize Processors
+image_processor = ImageProcessor(max_resolution=512)
 vae = load_vae()
 redux_processor = ReduxProcessor(vae=vae)
 k_sampler_processor = KSamplerProcessor(vae=vae, weight_dtype="fp8_e4m3fn")
@@ -49,9 +47,8 @@ async def edit_image(
             denoise=1.0
         )
 
-        output_pil = tensor2pil(generated_images)[0]
-
         # Create a BytesIO buffer and save the PIL image into it in PNG format:
+        output_pil = tensor2pil(generated_images)[0]
         buf = io.BytesIO()
         output_pil.save(buf, format="PNG")
         buf.seek(0)

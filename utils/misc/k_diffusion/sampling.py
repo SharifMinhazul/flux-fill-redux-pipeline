@@ -6,7 +6,7 @@ from torch import nn
 import torchsde
 from tqdm.auto import trange, tqdm
 
-from . import utils
+import utils.misc.k_diffusion.utils
 from . import deis
 import utils.misc.model_patcher
 import utils.misc.model_sampling
@@ -57,7 +57,7 @@ def get_sigmas_laplace(n, sigma_min, sigma_max, mu=0., beta=0.5, device='cpu'):
 
 def to_d(x, sigma, denoised):
     """Converts a denoiser output to a Karras ODE derivative."""
-    return (x - denoised) / utils.append_dims(sigma, x.ndim)
+    return (x - denoised) / utils.misc.k_diffusion.utils.append_dims(sigma, x.ndim)
 
 
 def get_ancestral_step(sigma_from, sigma_to, eta=1.):
