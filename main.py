@@ -53,6 +53,8 @@ async def edit_image(
         output_pil.save(buf, format="PNG")
         buf.seek(0)
 
+        image_processor.save_image(output_pil, f"outputs/images/{uuid.uuid4().hex}.png")
+
         # return generated output
         return StreamingResponse(buf, media_type="image/png")
     except Exception as e:
