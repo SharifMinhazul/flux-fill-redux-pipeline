@@ -9,6 +9,14 @@ from scipy.ndimage import gaussian_filter, grey_dilation, binary_fill_holes, bin
 from utils.mask_processor import MaskProcessor
 from utils.misc.utility import pil2tensor, tensor2pil, lanczos
 
+def rescale(samples, width, height, algorithm: str):
+    if algorithm == "bislerp":  # convert for compatibility with old workflows
+        algorithm = "bicubic"
+    algorithm = getattr(Image, algorithm.upper())  # i.e. Image.BICUBIC
+    samples_pil: Image.Image = F.to_pil_image(samples[0].cpu()).resize((width, height), algorithm)
+    samples = F.to_tensor(samples_pil).unsqueeze(0)
+    return samples
+
 class ImageProcessor:
     def __init__(self, max_resolution=1024):
         self.MAX_RESOLUTION = max_resolution
@@ -170,8 +178,7 @@ class ImageProcessor:
     def get_image_name_without_extension(image: Image) -> str:
         return ".".join(image.filename.split(".")[:-1])
 
-    @staticmethod
-    def grow_and_blur_mask(mask, blur_pixels):
+    def grow_and_blur_mask(self, mask, blur_pixels):
         if blur_pixels > 0.001:
             sigma = blur_pixels / 4
             growmask = mask.reshape((-1, mask.shape[-2], mask.shape[-1])).cpu()
@@ -194,8 +201,7 @@ class ImageProcessor:
         
         return mask
 
-    @staticmethod
-    def adjust_to_aspect_ratio(x_min, x_max, y_min, y_max, width, height, target_width, target_height):
+    def adjust_to_aspect_ratio(self, x_min, x_max, y_min, y_max, width, height, target_width, target_height):
         x_min_key, x_max_key, y_min_key, y_max_key = x_min, x_max, y_min, y_max
 
         # Calculate the current width and height
@@ -221,8 +227,7 @@ class ImageProcessor:
 
         return int(x_min), int(x_max), int(y_min), int(y_max)
 
-    @staticmethod
-    def adjust_to_preferred(x_min, x_max, y_min, y_max, width, height, preferred_x_start, preferred_x_end, preferred_y_start, preferred_y_end):
+    def adjust_to_preferred(self, x_min, x_max, y_min, y_max, width, height, preferred_x_start, preferred_x_end, preferred_y_start, preferred_y_end):
         # Ensure the area is within preferred bounds as much as possible
         if preferred_x_start <= x_min and preferred_x_end >= x_max and preferred_y_start <= y_min and preferred_y_end >= y_max:
             return x_min, x_max, y_min, y_max
@@ -251,8 +256,7 @@ class ImageProcessor:
 
         return int(x_min), int(x_max), int(y_min), int(y_max)
 
-    @staticmethod
-    def apply_padding(min_val, max_val, max_boundary, padding):
+    def apply_padding(self, min_val, max_val, max_boundary, padding):
         # Calculate the midpoint and the original range size
         original_range_size = max_val - min_val + 1
         midpoint = (min_val + max_val) // 2
@@ -279,8 +283,7 @@ class ImageProcessor:
 
         return new_min_val, new_max_val
 
-    @staticmethod
-    def inpaint_crop(image, mask, context_expand_pixels, context_expand_factor, fill_mask_holes, blur_mask_pixels, invert_mask, blend_pixels, mode, rescale_algorithm, force_width, force_height, rescale_factor, padding, min_width, min_height, max_width, max_height, optional_context_mask=None):
+    def inpaint_crop(self, image, mask, context_expand_pixels, context_expand_factor, fill_mask_holes, blur_mask_pixels, invert_mask, blend_pixels, mode, rescale_algorithm, force_width, force_height, rescale_factor, padding, min_width, min_height, max_width, max_height, optional_context_mask=None):
         if image.shape[0] > 1:
             assert mode == "forced size", "Mode must be 'forced size' when input is a batch of images"
         assert image.shape[0] == mask.shape[0], "Batch size of images and masks must be the same"
@@ -299,7 +302,7 @@ class ImageProcessor:
             if optional_context_mask is not None:
                 one_optional_context_mask = optional_context_mask[b].unsqueeze(0)
 
-            stitch, cropped_image, cropped_mask = IsADirectoryErrornpaint_crop_single_image(one_image, one_mask, context_expand_pixels, context_expand_factor, fill_mask_holes, blur_mask_pixels, invert_mask, blend_pixels, mode, rescale_algorithm, force_width, force_height, rescale_factor, padding, min_width, min_height, max_width, max_height, one_optional_context_mask)
+            stitch, cropped_image, cropped_mask = self.inpaint_crop_single_image(one_image, one_mask, context_expand_pixels, context_expand_factor, fill_mask_holes, blur_mask_pixels, invert_mask, blend_pixels, mode, rescale_algorithm, force_width, force_height, rescale_factor, padding, min_width, min_height, max_width, max_height, one_optional_context_mask)
 
             for key in result_stitch:
                 result_stitch[key].append(stitch[key])
@@ -313,9 +316,8 @@ class ImageProcessor:
 
         return result_stitch, result_image, result_mask
        
-    @staticmethod
     # Parts of this function are from KJNodes: https://github.com/kijai/ComfyUI-KJNodes
-    def inpaint_crop_single_image(image, mask, context_expand_pixels, context_expand_factor, fill_mask_holes, blur_mask_pixels, invert_mask, blend_pixels, mode, rescale_algorithm, force_width, force_height, rescale_factor, padding, min_width, min_height, max_width, max_height, optional_context_mask=None):
+    def inpaint_crop_single_image(self, image, mask, context_expand_pixels, context_expand_factor, fill_mask_holes, blur_mask_pixels, invert_mask, blend_pixels, mode, rescale_algorithm, force_width, force_height, rescale_factor, padding, min_width, min_height, max_width, max_height, optional_context_mask=None):
         #Validate or initialize mask
         if mask.shape[1] != image.shape[1] or mask.shape[2] != image.shape[2]:
             non_zero_indices = torch.nonzero(mask[0], as_tuple=True)
@@ -342,7 +344,7 @@ class ImageProcessor:
 
         # Grow and blur mask if requested
         if blur_mask_pixels > 0.001:
-            mask = row_and_blur_mask(mask, blur_mask_pixels)
+            mask = self.grow_and_blur_mask(mask, blur_mask_pixels)
 
         # Invert mask if requested
         if invert_mask:
@@ -493,14 +495,14 @@ class ImageProcessor:
                 # Adjust to meet minimum width constraint
                 target_width = min(current_width, min_width)
                 target_height = int(target_width / min_aspect_ratio)
-                x_min, x_max, y_min, y_max = adjust_to_aspect_ratio(x_min, x_max, y_min, y_max, width, height, target_width, target_height)
-                x_min, x_max, y_min, y_max = adjust_to_preferred(x_min, x_max, y_min, y_max, width, height, start_x, start_x+initial_width, start_y, start_y+initial_height)
+                x_min, x_max, y_min, y_max = self.adjust_to_aspect_ratio(x_min, x_max, y_min, y_max, width, height, target_width, target_height)
+                x_min, x_max, y_min, y_max = self.adjust_to_preferred(x_min, x_max, y_min, y_max, width, height, start_x, start_x+initial_width, start_y, start_y+initial_height)
             elif current_aspect_ratio > max_aspect_ratio:
                 # Adjust to meet maximum width constraint
                 target_height = min(current_height, max_height)
                 target_width = int(target_height * max_aspect_ratio)
-                x_min, x_max, y_min, y_max = adjust_to_aspect_ratio(x_min, x_max, y_min, y_max, width, height, target_width, target_height)
-                x_min, x_max, y_min, y_max = adjust_to_preferred(x_min, x_max, y_min, y_max, width, height, start_x, start_x+initial_width, start_y, start_y+initial_height)
+                x_min, x_max, y_min, y_max = self.adjust_to_aspect_ratio(x_min, x_max, y_min, y_max, width, height, target_width, target_height)
+                x_min, x_max, y_min, y_max = self.adjust_to_preferred(x_min, x_max, y_min, y_max, width, height, start_x, start_x+initial_width, start_y, start_y+initial_height)
             else:
                 # Aspect ratio is within bounds, keep the current size
                 target_width = current_width
@@ -575,8 +577,8 @@ class ImageProcessor:
 
         # Pad area (if possible, i.e. if pad is smaller than width/height) to avoid the sampler returning smaller results
         if (mode == 'free size' or mode == 'ranged size') and padding > 1:
-            x_min, x_max = apply_padding(x_min, x_max, width, padding)
-            y_min, y_max = apply_padding(y_min, y_max, height, padding)
+            x_min, x_max = self.apply_padding(x_min, x_max, width, padding)
+            y_min, y_max = self.apply_padding(y_min, y_max, height, padding)
 
         # Ensure that context area doesn't go outside of the image
         x_min = max(x_min, 0)
@@ -591,7 +593,7 @@ class ImageProcessor:
 
         # Grow and blur mask for blend if requested
         if blend_pixels > 0.001:
-            cropped_mask_blend = row_and_blur_mask(cropped_mask_blend, blend_pixels)
+            cropped_mask_blend = self.grow_and_blur_mask(cropped_mask_blend, blend_pixels)
 
         # Return stitch (to be consumed by the class below), image, and mask
         stitch = {'x': x_min, 'y': y_min, 'original_image': original_image, 'cropped_mask_blend': cropped_mask_blend, 'rescale_x': effective_upscale_factor_x, 'rescale_y': effective_upscale_factor_y, 'start_x': start_x, 'start_y': start_y, 'initial_width': initial_width, 'initial_height': initial_height}
